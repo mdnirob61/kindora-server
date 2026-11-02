@@ -25,6 +25,8 @@ const db = mongoClient.db('kindora');
 const eventsCollection = db.collection('events');
 
 
+
+// Create Event API
 app.post('/create-event', async (req, res) => {
     const data = req.body;
     const result = await eventsCollection.insertOne(data);
@@ -32,18 +34,57 @@ app.post('/create-event', async (req, res) => {
     res.send(result);
 });
 
+
+
+// Upcoming Events API
 app.get('/upcoming-events', async (req, res) => {
     const result = await eventsCollection.find({}).toArray();
     res.send(result)
-})
+});
 
 app.get('/upcoming-event/:id', async (req, res) => {
     const { id } = req.params;
     const result = await eventsCollection.findOne({ _id: new ObjectId(id) });
     res.send(result)
-})
+});
 
-//http://localhost:5000/upcoming-events
+
+
+// Joined Events API
+app.get('/joined-events/:email', async (req, res) => {
+    const { email } = req.params;
+    const result = await eventsCollection.find({ joinedUsers: email }).toArray();
+    res.send(result)
+});
+
+
+
+// Manage Events API
+app.get('/manage-events/:email', async (req, res) => {
+    const { email } = req.params;
+    const result = await eventsCollection.find({ email }).toArray();
+    res.send(result)
+});
+
+app.patch('/manage-events/:id', async (req, res) => {
+    const { id } = req.params;
+    const updatedData = req.body;
+    const result = await eventsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updatedData });
+
+    res.send(result);
+});
+
+app.delete('/manage-events/:id', async (req, res) => {
+    const { id } = req.params;
+    const result = await eventsCollection.deleteOne({ _id: new ObjectId(id) });
+    res.send(result)
+});
+
+
+
+//http://localhost:5000//manage-events/:id
 
 app.get('/', (req, res) => {
     res.send({ msg: "Server is running fine!" });
@@ -53,3 +94,5 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+export default app;
