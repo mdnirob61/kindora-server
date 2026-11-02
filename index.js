@@ -23,6 +23,7 @@ export async function connectToMongoDB() {
 const mongoClient = await connectToMongoDB();
 const db = mongoClient.db('kindora');
 const eventsCollection = db.collection('events');
+const joinedEventsCollection = db.collection('joinedEvents');
 
 
 
@@ -50,12 +51,40 @@ app.get('/upcoming-event/:id', async (req, res) => {
 
 
 
-// Joined Events API
+// Joined Event API
+app.post('/joined-event', async (req, res) => {
+    const data = req.body;
+
+    // Check existing participation
+    const alreadyJoined = await joinedEventsCollection.findOne({
+        eventId: data.eventId,
+        email: data.email,
+    });
+
+    if (alreadyJoined) {
+        return res.status(409).send({
+            message: "You have already joined this event!",
+        });
+    }
+
+    const result = await joinedEventsCollection.insertOne(data);
+
+    res.status(201).send({
+        success: true,
+        message: "Successfully joined the event!",
+        insertedId: result.insertedId,
+    });
+});
+
+
+
+// Get Joined Events API
 app.get('/joined-events/:email', async (req, res) => {
     const { email } = req.params;
-    const result = await eventsCollection.find({ joinedUsers: email }).toArray();
-    res.send(result)
+    const result = await joinedEventsCollection.find({ email: email }).toArray();
+    res.send(result);
 });
+
 
 
 
@@ -84,7 +113,7 @@ app.delete('/manage-events/:id', async (req, res) => {
 
 
 
-//http://localhost:5000//manage-events/:id
+//http://localhost:5000/joined-events/:email
 
 app.get('/', (req, res) => {
     res.send({ msg: "Server is running fine!" });
