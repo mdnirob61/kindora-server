@@ -117,7 +117,7 @@ app.post('/joined-event', verifyToken, async (req, res) => {
 
 
 // Get Joined Events API
-app.get('/joined-events', verifyToken, async (req, res) => {
+app.get('/joined-events/:email', verifyToken, async (req, res) => {
     const result = await joinedEventsCollection.find({ email: req.user.email }).toArray();
 
     res.send(result);
@@ -137,7 +137,7 @@ app.delete('/joined-events/:id', verifyToken, async (req, res) => {
 
 
 // Manage Events API
-app.get('/manage-events', verifyToken, async (req, res) => {
+app.get('/manage-events/:email', verifyToken, async (req, res) => {
     const result = await eventsCollection.find({ email: req.user.email }).toArray();
 
     res.status(200).send(result);
@@ -170,7 +170,20 @@ app.delete('/manage-events/:id', verifyToken, async (req, res) => {
 
 
 
-//http://localhost:5000//manage-event
+// Recent Upcoming Events API
+app.get('/recent-upcoming-events', async (req, res) => {
+    const today = new Date();
+    const todayDate = `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+    ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    const result = await eventsCollection.find({ eventDate: { $gt: todayDate } }).sort({ eventDate: 1 }).limit(6).toArray();
+
+    res.send(result);
+});
+
+
+
 
 app.get('/', (req, res) => {
     res.send({ msg: "Server is running fine!" });
