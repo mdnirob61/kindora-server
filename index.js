@@ -49,6 +49,7 @@ app.get('/upcoming-events', async (req, res) => {
 app.get('/upcoming-event/:id', async (req, res) => {
     const { id } = req.params;
     const result = await eventsCollection.findOne({ _id: new ObjectId(id) });
+    // console.log(result)
     res.send(result)
 });
 
@@ -57,10 +58,10 @@ app.get('/upcoming-event/:id', async (req, res) => {
 // Joined Event API
 app.post('/joined-event', async (req, res) => {
     const data = req.body;
-    delete data._id; // Remove _id field if it exists to avoid duplication
-    // console.log(data);
 
-    // Check existing participation
+    // Remove the original event's _id
+    delete data._id;
+
     const alreadyJoined = await joinedEventsCollection.findOne({
         eventId: data.eventId,
         email: data.email,
