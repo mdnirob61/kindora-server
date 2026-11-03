@@ -30,9 +30,12 @@ const joinedEventsCollection = db.collection('joinedEvents');
 // Create Event API
 app.post('/create-event', async (req, res) => {
     const data = req.body;
-    const result = await eventsCollection.insertOne(data);
 
-    res.send(result);
+    const result = await eventsCollection.insertOne({
+        ...data,
+        email: data.email,
+    });
+    res.send(result)
 });
 
 
@@ -54,6 +57,8 @@ app.get('/upcoming-event/:id', async (req, res) => {
 // Joined Event API
 app.post('/joined-event', async (req, res) => {
     const data = req.body;
+    delete data._id; // Remove _id field if it exists to avoid duplication
+    // console.log(data);
 
     // Check existing participation
     const alreadyJoined = await joinedEventsCollection.findOne({
@@ -78,6 +83,7 @@ app.post('/joined-event', async (req, res) => {
 
 
 
+
 // Get Joined Events API
 app.get('/joined-events/:email', async (req, res) => {
     const { email } = req.params;
@@ -85,14 +91,23 @@ app.get('/joined-events/:email', async (req, res) => {
     res.send(result);
 });
 
+app.delete('/joined-events/:id', async (req, res) => {
+    const { id } = req.params;
+    const result = await joinedEventsCollection.deleteOne({ _id: new ObjectId(id) });
+    res.send(result)
+});
+
+
 
 
 
 // Manage Events API
+// Get events created by a specific user
 app.get('/manage-events/:email', async (req, res) => {
     const { email } = req.params;
-    const result = await eventsCollection.find({ email }).toArray();
-    res.send(result)
+
+    const result = await eventsCollection.find({ email: email }).toArray();
+    res.status(200).send(result);
 });
 
 app.patch('/manage-events/:id', async (req, res) => {
@@ -113,7 +128,7 @@ app.delete('/manage-events/:id', async (req, res) => {
 
 
 
-//http://localhost:5000/joined-events/:email
+//http://localhost:5000//manage-event
 
 app.get('/', (req, res) => {
     res.send({ msg: "Server is running fine!" });
